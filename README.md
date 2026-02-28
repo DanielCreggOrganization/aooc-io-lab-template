@@ -127,36 +127,31 @@ graph TD
 package ie.atu.iolab;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
         String filePath = "resources/input.txt";
-        FileInputStream fis = null;
 
-        try {
-            fis = new FileInputStream(filePath);
+        try (FileInputStream fis = new FileInputStream(filePath)) {
             int data;
             int charCount = 0;
+            int byteCount = 0;
+
             while ((data = fis.read()) != -1) {
                 System.out.print((char) data); // Convert byte to character
                 charCount++;
+                byteCount++;
             }
+
             System.out.println("\nTotal characters: " + charCount);
+            System.out.println("Total bytes: " + byteCount);
 
         } catch (FileNotFoundException e) {
             System.err.println("File not found: " + e.getMessage());
         } catch (IOException e) {
             System.err.println("Error reading file: " + e.getMessage());
-        } finally {
-            try {
-                if (fis != null) {
-                    fis.close(); // Always close the stream
-                }
-            } catch (IOException e) {
-                System.err.println("Error closing file: " + e.getMessage());
-            }
         }
     }
 }
