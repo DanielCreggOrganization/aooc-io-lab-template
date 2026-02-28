@@ -12,7 +12,7 @@ This lab introduces you to Java Input/Output (I/O) operations, covering file han
 4.  [Writing with Output Streams](#4-writing-with-output-streams)
 5.  [Character-based I/O with Readers and Writers](#5-character-based-io-with-readers-and-writers)
 6.  [Buffered I/O Operations](#6-buffered-io-operations)
-7.  [Introduction to File I/O with Streams](#7-introduction-to-file-io-with-streams)
+7.  [Simple File I/O with Java NIO `Files` Utility](#7-simple-file-io-with-java-nio-files-utility)
 
 ---
 
@@ -128,16 +128,19 @@ package ie.atu.iolab;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) {
         // Define the path to the file we want to read
-        String filePath = "resources/input.txt";
+        Path filePath = Paths.get("resources", "input.txt");
         int byteFromFile;  // Variable to hold the current byte being read
         int charCount = 0; // Track the amount of characters read
 
         // try-with-resources ensures the FileInputStream is closed automatically.
-        try (FileInputStream fis = new FileInputStream(filePath)) {
+        // We use .toFile() to convert the NIO Path object to a standard Java File object.
+        try (FileInputStream fis = new FileInputStream(filePath.toFile())) {
             // read() reads one byte of data from the input stream. 
             // It returns -1 when there is no more data (End Of File).
             while ((byteFromFile = fis.read()) != -1) {
@@ -200,7 +203,7 @@ graph TD
     C --> F[Write to memory]
 ```
 
-### Code Example (introducing try-with-resources)
+### Code Example
 
 ```java
 package ie.atu.iolab;
@@ -208,24 +211,24 @@ package ie.atu.iolab;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) {
-        String inputPath = "resources/input.txt";
-        String outputPath = "resources/output.txt";
-
-        try (FileInputStream fis = new FileInputStream(inputPath);
-             FileOutputStream fos = new FileOutputStream(outputPath)) {
-
-            int data;
+        Path inputPath = Paths.get("resources", "input.txt");
+        Path outputPath = Paths.get("resources", "output.txt");
+        int data;
+        
+        try (FileInputStream fis = new FileInputStream(inputPath.toFile());
+             FileOutputStream fos = new FileOutputStream(outputPath.toFile())) {
             while ((data = fis.read()) != -1) {
                 fos.write(Character.toUpperCase((char)data));
             }
-            System.out.println("File copied successfully.");
-
         } catch (IOException e) {
             System.err.println("Error copying file: " + e.getMessage());
         }
+        System.out.println("File copied successfully.");
     }
 }
 ```
@@ -265,7 +268,7 @@ graph TD
     E --> H[Write text to files]
 ```
 
-### Code Example (Simplified for clarity)
+### Code Example
 
 ```java
 package ie.atu.iolab;
@@ -273,21 +276,21 @@ package ie.atu.iolab;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) {
-        String inputPath = "resources/input.txt";
-        String outputPath = "resources/output.txt";
+        Path inputPath = Paths.get("resources", "input.txt");
+        Path outputPath = Paths.get("resources", "output.txt");
+        int character;
 
-        try (FileReader reader = new FileReader(inputPath);
-             FileWriter writer = new FileWriter(outputPath)) {
-
-            int character;
+        try (FileReader reader = new FileReader(inputPath.toFile());
+             FileWriter writer = new FileWriter(outputPath.toFile())) {
             while ((character = reader.read()) != -1) {
                 writer.write(character); // Write the character directly
             }
             System.out.println("File copied successfully.");
-
         } catch (IOException e) {
             System.err.println("Error processing file: " + e.getMessage());
         }
@@ -340,14 +343,16 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) {
-        String inputPath = "resources/input.txt";
-        String outputPath = "resources/output.txt";
+        Path inputPath = Paths.get("resources", "input.txt");
+        Path outputPath = Paths.get("resources", "output.txt");
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(inputPath));
-             BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(inputPath.toFile()));
+             BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath.toFile()))) {
 
             String line;
             while ((line = reader.readLine()) != null) { // Read line by line
@@ -391,85 +396,73 @@ THIS IS THE SECOND LINE.
 
 ---
 
-## 7. Introduction to File I/O with Streams
+## 7. Simple File I/O with Java NIO `Files` Utility
 
 ### Concept Introduction
 
-Java Streams (Java 8+) provide a powerful way to process data. `Files.lines()` reads a file line by line, returning a `Stream<String>`.
+The `java.nio.file.Files` class (introduced in Java 7 and expanded in Java 11) provides incredibly simple, one-line utility methods to handle basic read and write operations. Rather than managing complex Stream, Reader, or Writer objects yourself, you can hand off a `Path` to the `Files` class and let it handle everything in the background.
 
 ```mermaid
 graph TD
-    A[File] --> B["Files.lines()"]
-    B --> C["Stream of Strings"]
-    C --> D[Filter]
-    C --> E[Map]
-    C --> F[Collect]
-    D --> G["Processed Data"]
-    E --> G
-    F --> G
+    A[Java Application] --> B["Files Utility Class"]
+    B --> C["writeString()"]
+    B --> D["readString()"]
+    C --> E[Underlying File]
+    D --> E
 ```
+
 ### Code Example
 
 ```java
 package ie.atu.iolab;
 
-import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.stream.Stream;
-import java.util.Arrays;
+import java.nio.file.Path;
+import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
-        String inputPath = "resources/input.txt";
-
-        // Reading and counting lines
-        try (Stream<String> lines = Files.lines(Paths.get(inputPath))) {
-            long lineCount = lines.count();
-            System.out.println("Number of lines: " + lineCount);
+        Path path = Path.of("resources", "nio_example.txt");
+        
+        String readContent = "";
+        try {
+            // Write a simple string directly to the file without needing Streams!
+            Files.writeString(path, "Hello, NIO!");
+            
+            // Read the entire content back into memory in one swoop
+            readContent = Files.readString(path);
         } catch (IOException e) {
-            System.err.println("Error reading file: " + e.getMessage());
+            System.err.println("An error occurred: " + e.getMessage());
         }
 
-        // Reading and processing each line, and counting words
-        try (Stream<String> lines = Files.lines(Paths.get(inputPath))) {
-           long wordCount = lines
-                    .flatMap(line -> Arrays.stream(line.split("\\s+"))) // Split each line into words
-                    .count(); // Count the words
-            System.out.println("Number of words: " + wordCount);
-
-        } catch (IOException e) {
-            System.err.println("Error processing file: " + e.getMessage());
-        }
+        // Print outside the try block
+        System.out.println(readContent);
     }
 }
 ```
 
 <details>
-<summary>Expected Output (with the three-line input.txt from Section 6)</summary>
+<summary>Expected Output (Console)</summary>
 
 ```
-Number of lines: 3
-Number of words: 15
+Hello, NIO!
 ```
 </details>
 
 ### DIY Task
 
 1.  **Start with the Example:** Copy the example code into your `Main` class.
-2.  **Use Previous `input.txt`:** Ensure `input.txt` still contains the three lines from the *previous* section's DIY task (Section 6).
-3.  **Modify the Code:** Modify the code to find and print the *longest* word in the file. You'll need to use a combination of `flatMap`, `max`, and `Comparator.comparingInt(String::length)`. You may also need to use `.orElse(null)` to handle the case where the file is empty.
-4.  **Run and Verify:**
+2.  **Modify the Path:** Change the script to output to `nio_task.txt` inside your resources folder instead of `nio_example.txt`.
+3.  **Modify the Code:** Update the file write payload. Instead of writing "Hello, NIO!", concatenate two lines together using standard `\n` characters (e.g. "This is line 1\nThis is line 2"). 
+4.  **Run and Verify:** Run the program and verify that the console output accurately parses and displays your multiline string with the correct newline break!
 
 <details>
 <summary>Expected Output</summary>
 
 ```
-Number of lines: 3
-Number of words: 15
-Longest word: second
+This is line 1
+This is line 2
 ```
-*Note: The "Number of lines" and "Number of words" output should be the same as before. The "Longest word" is the new part.*
 </details>
 
 ---
