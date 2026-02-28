@@ -121,38 +121,37 @@ graph TD
     C --> F[Read from memory]
 ```
 
-### Code Example (using try-catch-finally)
+### Code Example
 
 ```java
 package ie.atu.iolab;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
+        // Define the path to the file we want to read
         String filePath = "resources/input.txt";
+        int byteFromFile;  // Variable to hold the current byte being read
+        int charCount = 0; // Track the amount of characters read
 
+        // try-with-resources ensures the FileInputStream is closed automatically.
         try (FileInputStream fis = new FileInputStream(filePath)) {
-            int data;
-            int charCount = 0;
-            int byteCount = 0;
-
-            while ((data = fis.read()) != -1) {
-                System.out.print((char) data); // Convert byte to character
+            // read() reads one byte of data from the input stream. 
+            // It returns -1 when there is no more data (End Of File).
+            while ((byteFromFile = fis.read()) != -1) {
+                // Casting the byte to a char works here because we're using basic ASCII text.
+                // For advanced encodings (like UTF-8), a Reader should be used instead.
+                System.out.print((char) byteFromFile); 
                 charCount++;
-                byteCount++;
             }
-
-            System.out.println("\nTotal characters: " + charCount);
-            System.out.println("Total bytes: " + byteCount);
-
-        } catch (FileNotFoundException e) {
-            System.err.println("File not found: " + e.getMessage());
         } catch (IOException e) {
+            // IOException acts as a catch-all for stream errors,
+            // including FileNotFoundException.
             System.err.println("Error reading file: " + e.getMessage());
         }
+        System.out.println("\nTotal characters: " + charCount);
     }
 }
 ```
